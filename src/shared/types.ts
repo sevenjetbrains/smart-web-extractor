@@ -11,7 +11,18 @@ export type LocatorStrategy =
   | { kind: 'role'; role: string; name?: string }
   | { kind: 'label'; text: string }
   | { kind: 'css'; selector: string }
-  | { kind: 'context'; anchorText: string; relation: 'sameRow' | 'next' | 'parent' | 'columnOfHeader' };
+  | { kind: 'context'; anchorText: string; relation: 'sameRow' | 'next' | 'parent' | 'columnOfHeader' }
+  /** Position de colonne (0 = première), dans la grille du tableau après dépliage des cellules fusionnées. */
+  | { kind: 'columnIndex'; index: number };
+
+/** Manière de lire la valeur de l'élément localisé. */
+export type ReadMode =
+  /** Texte visible, ou valeur pour un champ de formulaire non sensible. */
+  | 'text'
+  /** Adresse absolue du lien contenu dans l'élément. */
+  | 'href'
+  /** Texte situé après le premier « : » (ex. « Grade : Ingénieur »). */
+  | 'afterColon';
 
 export interface Locator {
   /** Ordonnées par fiabilité décroissante. */
@@ -76,6 +87,8 @@ export interface FieldRule {
   sensitive: boolean;
   listLocator?: Locator;
   detailLocator?: Locator;
+  /** 'text' par défaut. */
+  read?: ReadMode;
   /** Utilisé si source = 'both'. */
   conflictPolicy: 'preferDetail' | 'preferList' | 'flag';
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { StatusInfo } from '../../shared/messages';
 import { sendToBackground } from '../lib/messaging';
+import { versionLabel } from '../lib/phases';
 
 const UPCOMING = [
   { title: 'Scénarios', detail: 'Création, révisions, import et export — phase 3.' },
@@ -23,7 +24,7 @@ export function Dashboard() {
     <main style={{ maxWidth: 880, margin: '0 auto', padding: '1.5rem 1rem' }}>
       <h1>Smart Web Extractor — Tableau de bord</h1>
       <p className="muted" aria-live="polite">
-        {status && `Version ${status.version} — phase ${status.phase} (fondations). Service worker opérationnel.`}
+        {status && `${versionLabel(status)}. Service worker opérationnel.`}
         {error}
       </p>
       <h2>Fonctionnalités à venir</h2>

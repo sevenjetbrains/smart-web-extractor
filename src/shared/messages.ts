@@ -2,6 +2,7 @@
  * Protocole de messages entre composants (cahier des charges §4.2, point 5).
  * Chaque message a un type déclaré et est validé par un schéma strict :
  * toute propriété inconnue ou mal typée entraîne un rejet.
+ * Les messages adressés au content script sont définis dans content-protocol.ts.
  */
 import { z } from './zod';
 
@@ -14,6 +15,10 @@ export const ERROR_CODES = [
   'RESTRICTED_PAGE',
   'TAB_NOT_FOUND',
   'CONTENT_UNREACHABLE',
+  'SOURCE_NOT_FOUND',
+  'AMBIGUOUS_SOURCE',
+  'SENSITIVE_FIELD',
+  'PICK_IN_PROGRESS',
   'INTERNAL_ERROR',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -32,25 +37,20 @@ export const fail = (code: ErrorCode, message: string): Result<never> => ({ ok: 
 
 export const GetStatusRequest = z.strictObject({ type: z.literal('GET_STATUS') });
 
-export const PingTabRequest = z.strictObject({
-  type: z.literal('PING_TAB'),
-  tabId: z.number().int().nonnegative(),
-});
+const tabId = z.number().int().nonnegative();
 
-export const BackgroundRequest = z.discriminatedUnion('type', [GetStatusRequest, PingTabRequest]);
+export const PingTabRequest = z.strictObject({ type: z.literal('PING_TAB'), tabId });
+
+/** Injecte (ou réinjecte) le content script dans l'onglet. */
+export const EnsureContentRequest = z.strictObject({ type: z.literal('ENSURE_CONTENT'), tabId });
+
+export const BackgroundRequest = z.discriminatedUnion('type', [GetStatusRequest, PingTabRequest, EnsureContentRequest]);
 export type BackgroundRequest = z.infer<typeof BackgroundRequest>;
 
 export interface StatusInfo {
   version: string;
   phase: number;
 }
-
-// ---------- Messages : service worker → content script ----------
-
-export const ContentPingRequest = z.strictObject({ type: z.literal('CONTENT_PING') });
-
-export const ContentRequest = z.discriminatedUnion('type', [ContentPingRequest]);
-export type ContentRequest = z.infer<typeof ContentRequest>;
 
 /** Résumé d'une page : uniquement des métadonnées et des comptes, aucune valeur de champ. */
 export const PageSummary = z.strictObject({
@@ -74,5 +74,6 @@ export const ContentPingResponse = z.discriminatedUnion('ok', [
 export interface BackgroundResponseMap {
   GET_STATUS: StatusInfo;
   PING_TAB: PageSummary;
+  ENSURE_CONTENT: { injected: true };
 }
 export type BackgroundResponse<K extends BackgroundRequest['type']> = Result<BackgroundResponseMap[K]>;

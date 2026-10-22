@@ -52,6 +52,8 @@ export function createRouter(ctx: RouterContext, handlers: Handlers): Router {
           return await handlers.GET_STATUS(request);
         case 'PING_TAB':
           return await handlers.PING_TAB(request);
+        case 'ENSURE_CONTENT':
+          return await handlers.ENSURE_CONTENT(request);
       }
     } catch {
       return fail('INTERNAL_ERROR', 'Erreur interne du service worker.');
