@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Liste des agents</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      table { border-collapse: collapse; margin-bottom: 2rem; }
+      th, td { border: 1px solid #999; padding: 0.3rem 0.6rem; text-align: start; }
+    </style>
+  </head>
+  <body>
+    <h1>Liste des agents</h1>
+    <table id="agents">
+      <thead>
+        <tr><th>Matricule</th><th>Nom</th><th>Grade</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>00123</td><td>Benali Karim</td><td>Ingénieur</td></tr>
+        <tr><td>00456</td><td>Dupont Élodie</td><td>Technicienne</td></tr>
+        <tr><td>00789</td><td dir="rtl">محمد العربي</td><td>Agent</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Recherche</h2>
+    <form onsubmit="return false">
+      <label>Nom <input type="text" name="nom" /></label>
+      <label>Service
+        <select name="service"><option>Tous</option><option>RH</option></select>
+      </label>
+      <label>Commentaire <textarea name="commentaire"></textarea></label>
+      <label>Mot de passe <input type="password" name="pwd" value="ne-doit-jamais-etre-lu" /></label>
+      <input type="hidden" name="csrf" value="jeton-secret" />
+    </form>
+  </body>
+</html>

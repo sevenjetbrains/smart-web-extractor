@@ -1,0 +1,84 @@
+:root {
+  --bg: #ffffff;
+  --surface: #f5f7fa;
+  --border: #d5dbe3;
+  --text: #1f2933;
+  --muted: #52606d;
+  --primary: #17365d;
+  --primary-text: #ffffff;
+  --focus: #2b6cb0;
+  --ok-bg: #e3f6e8;
+  --ok-text: #1c5e30;
+  --err-bg: #fde8e8;
+  --err-text: #8a1c1c;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15191e;
+    --surface: #1f252c;
+    --border: #39424d;
+    --text: #e6eaef;
+    --muted: #a3adb8;
+    --primary: #6f9ed6;
+    --primary-text: #0d1520;
+    --focus: #90c2ff;
+    --ok-bg: #173323;
+    --ok-text: #9be0b0;
+    --err-bg: #3a1a1a;
+    --err-text: #f5b0b0;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+h1 { font-size: 1.15rem; margin: 0 0 0.75rem; color: var(--primary); }
+h2 { font-size: 1rem; margin: 1rem 0 0.5rem; }
+p { margin: 0.4rem 0; }
+
+.muted { color: var(--muted); font-size: 0.875rem; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.card h2 { margin-top: 0; }
+
+.stack { display: flex; flex-direction: column; gap: 0.5rem; }
+.row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+button {
+  font: inherit;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--primary-text);
+  cursor: pointer;
+}
+button.secondary { background: transparent; color: var(--primary); }
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.alert { border-radius: 6px; padding: 0.5rem 0.65rem; }
+.alert.ok { background: var(--ok-bg); color: var(--ok-text); }
+.alert.err { background: var(--err-bg); color: var(--err-text); }
+
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 0.75rem; margin: 0.5rem 0 0; }
+dt { color: var(--muted); }
+dd { margin: 0; }
+
+footer { margin-top: 1rem; }
