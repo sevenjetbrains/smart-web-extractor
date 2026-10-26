@@ -3,13 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <title>Pages de test — Smart Web Extractor</title>
+    <style>body { font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.6; }</style>
   </head>
   <body>
     <h1>Pages de démonstration</h1>
     <p>Pages locales servies en HTTP pour tester l’extension (cahier des charges §8.2).</p>
     <ul>
-      <li><a href="liste-simple.html">Liste simple (phase 1)</a></li>
+      <li><a href="liste-simple.html">Liste simple</a> — tableau avec en-têtes, formulaire avec champs sensibles</li>
+      <li><a href="liste-sans-entetes.html">Liste sans en-têtes</a> — en-tête déduit, tableau de données seules, cellules vides</li>
+      <li><a href="cellules-fusionnees.html">Cellules fusionnées</a> — en-têtes sur deux niveaux, rowspan, colspan</li>
+      <li><a href="liste-cartes.html">Annuaire en cartes</a> — liste non tabulaire, champ manquant, menu à ignorer</li>
+      <li><a href="fiche-agent.html">Fiche agent</a> — paires libellé/valeur (dl, « Libellé : valeur », tableau clé/valeur, formulaire)</li>
+      <li><a href="contenu-dynamique.html">Contenu dynamique</a> — tableau chargé après 1,2 s</li>
+      <li><a href="selecteurs-ambigus.html">Sélecteurs ambigus</a> — tableaux identiques, en-têtes en double, identifiant en double</li>
     </ul>
-    <p>Les autres pages (pagination, fiches, contenus dynamiques, sélecteurs ambigus…) seront ajoutées en phase 2.</p>
+    <p>Pagination et fiches ouvertes par clic JavaScript : phase 5.</p>
   </body>
 </html>

@@ -2,7 +2,8 @@
  * Injection à la demande du content script et dialogue avec lui (cahier §4.2, points 2 et 4).
  */
 import { PATHS } from '../manifest';
-import { ContentPingResponse, fail, type ContentRequest, type PageSummary, type Result } from '../shared/messages';
+import type { ContentRequest } from '../shared/content-protocol';
+import { ContentPingResponse, fail, ok, type PageSummary, type Result } from '../shared/messages';
 
 /** Traduit une erreur de chrome.scripting en erreur compréhensible. */
 export function classifyInjectionError(message: string): Result<never> {
@@ -18,12 +19,22 @@ export function classifyInjectionError(message: string): Result<never> {
   );
 }
 
-export async function pingTab(tabId: number): Promise<Result<PageSummary>> {
+/**
+ * Injecte le content script. Une réinjection remplace l'écouteur précédent
+ * (cf. src/content/main.ts), ce qui couvre aussi le cas d'une extension rechargée.
+ */
+export async function ensureContent(tabId: number): Promise<Result<{ injected: true }>> {
   try {
     await chrome.scripting.executeScript({ target: { tabId }, files: [PATHS.contentScript] });
+    return ok({ injected: true });
   } catch (e) {
     return classifyInjectionError(e instanceof Error ? e.message : String(e));
   }
+}
+
+export async function pingTab(tabId: number): Promise<Result<PageSummary>> {
+  const injected = await ensureContent(tabId);
+  if (!injected.ok) return injected;
 
   let raw: unknown;
   try {

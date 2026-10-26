@@ -10,6 +10,7 @@ function setup() {
   const handlers: Handlers = {
     GET_STATUS: vi.fn(async () => ok({ version: '0.1.0', phase: 1 })),
     PING_TAB: vi.fn(async () => ok(summary)),
+    ENSURE_CONTENT: vi.fn(async () => ok({ injected: true as const })),
   };
   return { handlers, route: createRouter(ctx, handlers) };
 }
@@ -20,6 +21,7 @@ describe('createRouter', () => {
     expect(await route({ type: 'GET_STATUS' }, fromPanel)).toEqual({ ok: true, data: { version: '0.1.0', phase: 1 } });
     await route({ type: 'PING_TAB', tabId: 7 }, fromPanel);
     expect(handlers.PING_TAB).toHaveBeenCalledWith({ type: 'PING_TAB', tabId: 7 });
+    expect(await route({ type: 'ENSURE_CONTENT', tabId: 3 }, fromPanel)).toEqual({ ok: true, data: { injected: true } });
   });
 
   it('refuse un message venant d’une autre extension', async () => {

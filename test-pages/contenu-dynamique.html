@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Contenu dynamique</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      table { border-collapse: collapse; }
+      th, td { border: 1px solid #999; padding: 0.3rem 0.6rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Agents (chargement différé)</h1>
+    <div id="zone">
+      <p class="loading" aria-busy="true">Chargement…</p>
+    </div>
+    <script>
+      // Le tableau n'existe qu'après un délai de 1,2 s (simulation d'un appel réseau).
+      setTimeout(() => {
+        const zone = document.getElementById('zone');
+        zone.replaceChildren();
+        const table = document.createElement('table');
+        table.id = 'agents-dynamiques';
+        const rows = [
+          ['Matricule', 'Nom', 'Grade'],
+          ['03001', 'Kaci Amine', 'Ingénieur'],
+          ['03002', 'Garnier Léa', 'Agent'],
+          ['03003', 'Ziani Rym', 'Cheffe de service'],
+        ];
+        rows.forEach((cells, i) => {
+          const tr = table.insertRow();
+          cells.forEach((text) => {
+            const cell = document.createElement(i === 0 ? 'th' : 'td');
+            cell.textContent = text;
+            tr.appendChild(cell);
+          });
+        });
+        zone.appendChild(table);
+      }, 1200);
+    </script>
+  </body>
+</html>

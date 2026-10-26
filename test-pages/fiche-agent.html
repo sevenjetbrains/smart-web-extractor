@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fiche agent</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.3rem 1rem; }
+      dt { font-weight: bold; }
+      table { border-collapse: collapse; }
+      th, td { border: 1px solid #999; padding: 0.3rem 0.6rem; text-align: start; }
+    </style>
+  </head>
+  <body>
+    <p><a href="liste-cartes.html">← Retour à l’annuaire</a></p>
+    <h1>Fiche de l’agent</h1>
+
+    <h2>Identité</h2>
+    <dl>
+      <dt>Matricule</dt><dd id="fiche-matricule">00123</dd>
+      <dt>Nom</dt><dd>Benali Karim</dd>
+      <dt>Grade</dt><dd data-field="grade">Ingénieur</dd>
+    </dl>
+
+    <p><strong>Date d’entrée :</strong> 12/03/2015</p>
+    <p>Situation : En activité</p>
+
+    <h2>Coordonnées</h2>
+    <table>
+      <tr><th>Adresse</th><td>12 rue des Oliviers</td></tr>
+      <tr><th>Ville</th><td>Oran</td></tr>
+    </table>
+
+    <form onsubmit="return false">
+      <label for="tel">Téléphone</label>
+      <input id="tel" name="telephone" value="0550 12 34 56" readonly />
+      <label>Service
+        <select name="service"><option>RH</option><option selected>Informatique</option></select>
+      </label>
+      <label for="pwd">Mot de passe</label>
+      <input id="pwd" type="password" value="ne-doit-jamais-etre-lu" />
+    </form>
+  </body>
+</html>

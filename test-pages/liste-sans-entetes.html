@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Liste sans en-têtes</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      table { border-collapse: collapse; margin-bottom: 2rem; }
+      td { border: 1px solid #999; padding: 0.3rem 0.6rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Effectifs par service</h1>
+    <!-- Aucun <th> : la première ligne contient les libellés dans des <td>. -->
+    <table id="effectifs">
+      <tr><td>Matricule</td><td>Nom</td><td>Service</td><td>Date d'entrée</td></tr>
+      <tr><td>01001</td><td>Haddad Samir</td><td>Comptabilité</td><td>03/01/2012</td></tr>
+      <tr><td>01002</td><td>Lefèvre Chloé</td><td></td><td>15/09/2018</td></tr>
+      <tr><td>01003</td><td>Bouzid Nadia</td><td>Ressources humaines</td><td>01/06/2020</td></tr>
+      <tr><td>01004</td><td>Martin Hugo</td><td>Informatique</td><td></td></tr>
+    </table>
+
+    <h2>Codes postaux</h2>
+    <!-- Aucune ligne d'en-tête : uniquement des données. -->
+    <table class="codes">
+      <tr><td>31000</td><td>Oran</td></tr>
+      <tr><td>16000</td><td>Alger</td></tr>
+      <tr><td>25000</td><td>Constantine</td></tr>
+    </table>
+  </body>
+</html>

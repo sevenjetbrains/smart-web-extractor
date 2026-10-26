@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Annuaire en cartes</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      nav ul { display: flex; gap: 1rem; list-style: none; padding: 0; }
+      .cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+      .carte-agent { border: 1px solid #bbb; border-radius: 8px; padding: 0.8rem; }
+      .carte-agent h3 { margin: 0 0 0.4rem; }
+      .libelle { color: #666; }
+    </style>
+  </head>
+  <body>
+    <nav aria-label="Menu principal">
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="liste-simple.html">Liste</a></li>
+        <li><a href="liste-cartes.html">Annuaire</a></li>
+        <li><a href="fiche-agent.html">Fiche</a></li>
+      </ul>
+    </nav>
+
+    <h1>Annuaire des agents</h1>
+    <div class="cartes">
+      <article class="carte-agent">
+        <h3 class="nom">Benali Karim</h3>
+        <p><span class="libelle">Matricule :</span> <span class="matricule">00123</span></p>
+        <p><span class="libelle">Grade :</span> <span class="grade">Ingénieur</span></p>
+        <a class="details" href="fiche-agent.html?id=00123">Voir la fiche</a>
+      </article>
+      <article class="carte-agent">
+        <h3 class="nom">Dupont Élodie</h3>
+        <p><span class="libelle">Matricule :</span> <span class="matricule">00456</span></p>
+        <p><span class="libelle">Grade :</span> <span class="grade">Technicienne</span></p>
+        <a class="details" href="fiche-agent.html?id=00456">Voir la fiche</a>
+      </article>
+      <article class="carte-agent">
+        <h3 class="nom">محمد العربي</h3>
+        <p><span class="libelle">Matricule :</span> <span class="matricule">00789</span></p>
+        <!-- Champ manquant : pas de grade pour cet agent. -->
+        <a class="details" href="fiche-agent.html?id=00789">Voir la fiche</a>
+      </article>
+      <article class="carte-agent">
+        <h3 class="nom">Petit Lucas</h3>
+        <p><span class="libelle">Matricule :</span> <span class="matricule">01010</span></p>
+        <p><span class="libelle">Grade :</span> <span class="grade">Agent</span></p>
+        <a class="details" href="fiche-agent.html?id=01010">Voir la fiche</a>
+      </article>
+    </div>
+  </body>
+</html>
