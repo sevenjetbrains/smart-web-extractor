@@ -9,7 +9,7 @@ La spécification complète est dans [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.
 | Phase | Contenu | État |
 |---|---|---|
 | 1. Fondations | Build, manifeste, permissions, panneau latéral, routeur de messages validés, injection à la demande | ✅ validée |
-| 2. Détection | Tableaux, listes, champs, sélecteur visuel, localisateurs, extraction manuelle | ✅ terminée, en attente de validation |
+| 2. Détection | Tableaux, listes, champs, sélecteur visuel, localisateurs, extraction manuelle | ✅ validée |
 | 3. Stockage | Scénarios, révisions, résultats, purge | à venir |
 | 4. Apprentissage | Enregistrement du parcours, éditeur de scénario | à venir |
 | 5. Automatisation | Navigation, pagination, reprise, mode assisté | à venir |
