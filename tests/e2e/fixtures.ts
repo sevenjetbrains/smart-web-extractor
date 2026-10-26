@@ -22,9 +22,14 @@ export interface ExtensionHarness {
   close(): Promise<void>;
 }
 
-export async function launchExtension(): Promise<ExtensionHarness> {
+export interface LaunchOptions {
+  /** Profil Chrome à réutiliser (simulation d'un redémarrage du navigateur) ; temporaire par défaut. */
+  userDataDir?: string;
+}
+
+export async function launchExtension({ userDataDir = '' }: LaunchOptions = {}): Promise<ExtensionHarness> {
   const { server, baseUrl }: { server: Server; baseUrl: string } = await startTestPagesServer();
-  const context = await chromium.launchPersistentContext('', {
+  const context = await chromium.launchPersistentContext(userDataDir, {
     channel: 'chromium',
     args: [`--disable-extensions-except=${EXTENSION_PATH}`, `--load-extension=${EXTENSION_PATH}`],
   });

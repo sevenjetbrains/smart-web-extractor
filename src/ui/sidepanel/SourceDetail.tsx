@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { DetectedColumn, Warning } from '../../shared/content-protocol';
-import type { FieldValueType } from '../../shared/types';
-import { slugify } from '../lib/field-keys';
+import type { FieldValueType, Scenario } from '../../shared/types';
+import { slugify } from '../../shared/field-keys';
 import { type DetectionApi, type SourceState } from './useDetection';
 
 const KIND_LABELS = { table: 'Tableau', list: 'Liste', fields: 'Champs' } as const;
@@ -54,13 +54,31 @@ function FieldRow({ state, column, api }: { state: SourceState; column: Detected
         />
       </div>
       <p className="muted small" dir="auto">
-        {column.samples.length > 0 ? `Aperçu : ${column.samples.join(' · ')}` : 'Aucune valeur sur cette page'}
-        {column.emptyCount > 0 && state.source.kind !== 'fields' ? ` — ${column.emptyCount} vide(s)` : ''}
+        {config.sensitive
+          ? 'Champ sensible : sa valeur ne sera jamais lue ni enregistrée.'
+          : column.samples.length > 0
+            ? `Aperçu : ${column.samples.join(' · ')}`
+            : 'Aucune valeur sur cette page'}
+        {!config.sensitive && column.emptyCount > 0 && state.source.kind !== 'fields' ? ` — ${column.emptyCount} vide(s)` : ''}
       </p>
       <div className="field-options small">
         <label>
-          <input type="checkbox" checked={config.required} onChange={(e) => update({ required: e.target.checked })} />
+          <input
+            type="checkbox"
+            checked={config.required && !config.sensitive}
+            disabled={config.sensitive}
+            onChange={(e) => update({ required: e.target.checked })}
+          />
           Obligatoire
+        </label>
+        <label title="La valeur d’un champ sensible n’est jamais lue ni enregistrée.">
+          <input
+            type="checkbox"
+            checked={config.sensitive}
+            onChange={(e) => update({ sensitive: e.target.checked })}
+            aria-label={`Champ « ${config.label} » sensible (jamais lu)`}
+          />
+          Sensible
         </label>
         <label>
           Type{' '}
@@ -84,8 +102,19 @@ function FieldRow({ state, column, api }: { state: SourceState; column: Detected
   );
 }
 
-export function SourceDetail({ state, api }: { state: SourceState; api: DetectionApi }) {
+export function SourceDetail({
+  state,
+  api,
+  onScenarioSaved,
+}: {
+  state: SourceState;
+  api: DetectionApi;
+  onScenarioSaved: (scenario: Scenario) => void;
+}) {
   const { source } = state;
+  const [scenarioName, setScenarioName] = useState(source.label);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => setScenarioName(source.label), [source.id, source.label]);
   const canToggleHeader = source.kind === 'table' && source.headerMode !== 'explicit';
   // La case reflète le choix tout de suite, pendant que la page est réanalysée.
   const [pendingHeader, setPendingHeader] = useState<boolean | null>(null);
@@ -147,6 +176,33 @@ export function SourceDetail({ state, api }: { state: SourceState; api: Detectio
       >
         {api.extraction.status === 'loading' ? 'Extraction…' : 'Extraire cette page'}
       </button>
+
+      <form
+        className="save-scenario"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setSaving(true);
+          void api.saveAsScenario(source.id, scenarioName).then((scenario) => {
+            setSaving(false);
+            if (scenario) onScenarioSaved(scenario);
+          });
+        }}
+      >
+        <h3>Conserver ces règles</h3>
+        <label className="small stack-label">
+          Nom du scénario
+          <input
+            type="text"
+            value={scenarioName}
+            maxLength={200}
+            required
+            onChange={(e) => setScenarioName(e.target.value)}
+          />
+        </label>
+        <button type="submit" className="secondary" disabled={saving || selectedCount === 0 || !scenarioName.trim()}>
+          Enregistrer comme scénario
+        </button>
+      </form>
     </section>
   );
 }

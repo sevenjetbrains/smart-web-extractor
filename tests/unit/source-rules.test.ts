@@ -40,6 +40,14 @@ describe('règles du code source', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('n’accède jamais au stockage depuis le content script (cahier §4.2, point 3)', () => {
+    const offenders = files
+      .filter(({ path }) => path.startsWith('content/'))
+      .filter(({ code }) => /indexedDB|chrome\.storage|localStorage|sessionStorage|from\s+['"]\.\.\/storage\//.test(code))
+      .map((f) => f.path);
+    expect(offenders).toEqual([]);
+  });
+
   it('n’envoie aucune requête réseau', () => {
     const offenders = files
       .filter(({ code }) => /\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon|EventSource/.test(code))

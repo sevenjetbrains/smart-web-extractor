@@ -1,7 +1,7 @@
 /**
  * Modèle de données de référence (cahier des charges §5.1).
  * Scénarios (règles), exécutions (campagnes) et résultats (données) sont distincts.
- * Les schémas de validation correspondants seront ajoutés en phase 3 (stockage).
+ * Les schémas de validation correspondants sont dans schemas.ts.
  */
 
 // ---------- Localisateurs ----------
@@ -87,8 +87,8 @@ export interface FieldRule {
   sensitive: boolean;
   listLocator?: Locator;
   detailLocator?: Locator;
-  /** 'text' par défaut. */
-  read?: ReadMode;
+  /** Ajouté en version 2 du format (cf. storage/migrations.ts). */
+  read: ReadMode;
   /** Utilisé si source = 'both'. */
   conflictPolicy: 'preferDetail' | 'preferList' | 'flag';
 }
@@ -108,6 +108,22 @@ export type PaginationRule =
   | { kind: 'nextButton'; locator: Locator }
   | { kind: 'pageLinks'; locator: Locator }
   | { kind: 'infiniteScroll'; maxScrolls: number };
+
+// ---------- Source de l'extraction ----------
+export type SourceKind = 'table' | 'list' | 'fields';
+export type HeaderMode = 'explicit' | 'firstRow' | 'none';
+
+/**
+ * Où se trouvent les données sur la page : tableau, liste d'éléments répétés,
+ * ou champs isolés d'une fiche. Ajouté en version 2 du format.
+ */
+export interface ExtractionSource {
+  kind: SourceKind;
+  container: Locator;
+  /** Sélecteur relatif des éléments d'une liste (ex. ":scope > article.carte"). */
+  itemSelector?: string;
+  headerMode?: HeaderMode;
+}
 
 // ---------- Scénario ----------
 export type RunMode = 'semi_automatic' | 'automatic';
@@ -137,6 +153,8 @@ export interface Scenario {
   status: 'draft' | 'validated';
   fields: FieldRule[];
   steps: Step[];
+  /** Absente des scénarios de version 1. */
+  extractionSource?: ExtractionSource;
   pagination: PaginationRule;
   association: AssociationKey;
   limits: ScenarioLimits;
