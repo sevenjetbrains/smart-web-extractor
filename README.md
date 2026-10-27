@@ -10,7 +10,7 @@ La spécification complète est dans [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.
 |---|---|---|
 | 1. Fondations | Build, manifeste, permissions, panneau latéral, routeur de messages validés, injection à la demande | ✅ validée |
 | 2. Détection | Tableaux, listes, champs, sélecteur visuel, localisateurs, extraction manuelle | ✅ validée |
-| 3. Stockage | Scénarios, révisions, migrations, import/export, exécutions, résultats, quotas, purge | ✅ terminée, en attente de validation |
+| 3. Stockage | Scénarios, révisions, migrations, import/export, exécutions, résultats, quotas, purge | ✅ validée |
 | 4. Apprentissage | Enregistrement du parcours, éditeur de scénario | à venir |
 | 5. Automatisation | Navigation, pagination, reprise, mode assisté | à venir |
 | 6. Résultats et export | Tableau de résultats, XLSX, CSV | à venir |
