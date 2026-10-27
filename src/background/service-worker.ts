@@ -11,8 +11,11 @@
 import { createRouter } from './message-router';
 import { ensureContent, pingTab } from './tab-access';
 import { ok } from '../shared/messages';
+import { purgeExpiredRuns } from '../storage/purge';
+import { pauseInterruptedRuns } from '../storage/runs';
+import { getSettings } from '../storage/settings';
 
-const CURRENT_PHASE = 2;
+const CURRENT_PHASE = 3;
 
 const router = createRouter(
   { extensionId: chrome.runtime.id, extensionOrigin: chrome.runtime.getURL('') },
@@ -27,3 +30,19 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
   void router(message, { id: sender.id, url: sender.url }).then(sendResponse);
   return true; // réponse asynchrone
 });
+
+/**
+ * À chaque démarrage du service worker : une exécution restée « en cours » a
+ * été interrompue et passe en pause (cahier §7) ; les exécutions dont la durée
+ * de conservation est dépassée sont purgées (cahier §6.2).
+ */
+async function startupMaintenance(): Promise<void> {
+  try {
+    await pauseInterruptedRuns();
+    await purgeExpiredRuns((await getSettings()).retentionDays);
+  } catch {
+    // Stockage indisponible (quota, base verrouillée) : nouvelle tentative au prochain démarrage.
+  }
+}
+
+void startupMaintenance();

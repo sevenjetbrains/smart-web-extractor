@@ -36,14 +36,14 @@ test('la popup s’affiche sans erreur', async () => {
 
 test('le tableau de bord communique avec le service worker', async () => {
   const { page, errors } = await h.openExtensionPage('ui/dashboard/index.html');
-  await expect(page.getByText('Version 0.2.0 — phase 2 (détection). Service worker opérationnel.')).toBeVisible();
+  await expect(page.getByText('Version 0.3.0 — phase 3 (stockage). Service worker opérationnel.')).toBeVisible();
   expect(errors).toEqual([]);
   await page.close();
 });
 
 test('le panneau latéral s’affiche et obtient le statut', async () => {
   const { page, errors } = await h.openExtensionPage('ui/sidepanel/index.html');
-  await expect(page.getByText('Version 0.2.0 — phase 2 (détection)')).toBeVisible();
+  await expect(page.getByText('Version 0.3.0 — phase 3 (stockage)')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Analyser la page' })).toBeVisible();
   expect(errors).toEqual([]);
   await page.close();

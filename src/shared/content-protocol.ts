@@ -5,7 +5,19 @@
  */
 import { z } from './zod';
 import { ERROR_CODES } from './messages';
-import { FieldValueTypeSchema, LocatorSchema, ReadModeSchema } from './schemas';
+import {
+  ExtractionSourceSchema,
+  FieldKeySchema,
+  FieldValueTypeSchema,
+  HeaderModeSchema,
+  LocatorSchema,
+  ReadModeSchema,
+  SourceKindSchema,
+} from './schemas';
+import type { ExtractionSource, HeaderMode, SourceKind } from './types';
+
+export { HeaderModeSchema, SourceKindSchema };
+export type { HeaderMode, SourceKind };
 
 // ---------- Avertissements ----------
 
@@ -35,9 +47,6 @@ export type Warning = z.infer<typeof WarningSchema>;
 
 // ---------- Rapport de détection ----------
 
-export const HeaderModeSchema = z.enum(['explicit', 'firstRow', 'none']);
-export type HeaderMode = z.infer<typeof HeaderModeSchema>;
-
 export const DetectedColumnSchema = z.strictObject({
   /** Identifiant technique dans la source (ex. "col_2"), stable pour une même page. */
   id: z.string().max(100),
@@ -51,9 +60,6 @@ export const DetectedColumnSchema = z.strictObject({
   warnings: z.array(WarningSchema).max(10),
 });
 export type DetectedColumn = z.infer<typeof DetectedColumnSchema>;
-
-export const SourceKindSchema = z.enum(['table', 'list', 'fields']);
-export type SourceKind = z.infer<typeof SourceKindSchema>;
 
 export const DetectedSourceSchema = z.strictObject({
   /** Identifiant dans le rapport (ex. "table-0") ; valable pour la page analysée uniquement. */
@@ -83,16 +89,11 @@ export type DetectionReport = z.infer<typeof DetectionReportSchema>;
 
 // ---------- Extraction ----------
 
-export const ExtractSourceSchema = z.strictObject({
-  kind: SourceKindSchema,
-  container: LocatorSchema,
-  itemSelector: z.string().max(500).optional(),
-  headerMode: HeaderModeSchema.optional(),
-});
-export type ExtractSource = z.infer<typeof ExtractSourceSchema>;
+export const ExtractSourceSchema = ExtractionSourceSchema;
+export type ExtractSource = ExtractionSource;
 
 export const ExtractFieldSchema = z.strictObject({
-  key: z.string().regex(/^[a-z][a-z0-9_]{0,59}$/),
+  key: FieldKeySchema,
   locator: LocatorSchema,
   read: ReadModeSchema,
 });

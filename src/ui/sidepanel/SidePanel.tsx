@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { StatusInfo } from '../../shared/messages';
+import { FirstRunNotice } from '../components/FirstRunNotice';
 import { versionLabel } from '../lib/phases';
 import { getActiveTab, originPattern, sendToBackground, type ActiveTabInfo } from '../lib/messaging';
+import { useScenarios } from '../lib/useScenarios';
 import { ExtractionPreview } from './ExtractionPreview';
+import { ScenariosCard } from './ScenariosCard';
 import { SourceDetail, Warnings, sourceSummary } from './SourceDetail';
 import { useDetection } from './useDetection';
 
@@ -24,15 +27,18 @@ async function currentTab(): Promise<ActiveTabInfo | null> {
 
 /**
  * Panneau latéral : interface principale (cahier §4.1). Il reste ouvert pendant
- * la navigation et suit l'onglet actif. En phase 2 : analyse de la page,
- * choix et renommage des champs, sélection dans la page, extraction manuelle.
+ * la navigation et suit l'onglet actif : analyse de la page, choix des champs,
+ * sélection dans la page, extraction manuelle, enregistrement en scénario,
+ * extraction avec un scénario du domaine et enregistrement des résultats.
  */
 export function SidePanel() {
   const [status, setStatus] = useState<StatusInfo | null>(null);
   const [tab, setTab] = useState<ActiveTabInfo | null>(null);
   const [granted, setGranted] = useState(false);
-  const detection = useDetection(tab?.id ?? null);
+  const detection = useDetection(tab?.id ?? null, tab?.url ?? null);
   const { reset } = detection;
+  const { scenarios } = useScenarios();
+  const [scenarioId, setScenarioId] = useState<string | null>(null);
 
   const tabRef = useRef<ActiveTabInfo | null>(null);
 
@@ -71,12 +77,15 @@ export function SidePanel() {
   }
 
   const host = tab?.url ? new URL(tab.url).host : undefined;
+  const hostname = tab?.url ? new URL(tab.url).hostname : undefined;
+  const domainScenarios = scenarios?.filter((s) => s.domain === hostname) ?? [];
   const { report, sources, order, activeId } = detection;
   const active = activeId ? sources[activeId] : undefined;
 
   return (
     <main className="panel">
       <h1>Smart Web Extractor</h1>
+      <FirstRunNotice />
 
       <section className="card" aria-labelledby="page-title">
         <h2 id="page-title">Page courante</h2>
@@ -130,6 +139,14 @@ export function SidePanel() {
         </div>
       </section>
 
+      <ScenariosCard
+        scenarios={domainScenarios}
+        selectedId={scenarioId}
+        onSelect={setScenarioId}
+        api={detection}
+        disabled={!tab || detection.loading || detection.picking}
+      />
+
       {report && (
         <section aria-labelledby="sources-title">
           <h2 id="sources-title">
@@ -158,8 +175,8 @@ export function SidePanel() {
         </section>
       )}
 
-      {active && <SourceDetail state={active} api={detection} />}
-      <ExtractionPreview extraction={detection.extraction} />
+      {active && <SourceDetail state={active} api={detection} onScenarioSaved={(s) => setScenarioId(s.id)} />}
+      <ExtractionPreview extraction={detection.extraction} onSave={() => void detection.saveResults()} />
 
       <footer className="muted small">
         {status ? versionLabel(status) : 'Connexion au service worker…'}

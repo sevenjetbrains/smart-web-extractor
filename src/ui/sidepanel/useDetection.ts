@@ -1,8 +1,9 @@
 /**
  * État du panneau de détection : rapport de la page, configuration des champs
- * (sélection, libellé, obligatoire, type), sélection dans la page et extraction
- * manuelle. L'état vit le temps de la page analysée ; l'enregistrement en
- * scénario arrive en phase 3.
+ * (sélection, libellé, obligatoire, sensible, type), sélection dans la page,
+ * extraction manuelle, enregistrement en scénario et enregistrement des
+ * résultats. L'état de la détection vit le temps de la page analysée ; les
+ * scénarios et les résultats sont conservés dans le stockage local.
  */
 import { useCallback, useState } from 'react';
 import { z } from '../../shared/zod';
@@ -10,6 +11,7 @@ import {
   DetectionReportSchema,
   ExtractResultSchema,
   PickResultSchema,
+  type ContentRequest,
   type DetectedColumn,
   type DetectedSource,
   type DetectionReport,
@@ -17,16 +19,19 @@ import {
   type HeaderMode,
 } from '../../shared/content-protocol';
 import type { AppError } from '../../shared/messages';
-import type { FieldValueType, Locator } from '../../shared/types';
+import type { Locator, Scenario } from '../../shared/types';
+import { storageErrorMessage } from '../../storage/errors';
+import { saveManualRun } from '../../storage/manual-run';
+import { createScenario } from '../../storage/scenarios';
 import { callContent } from '../lib/content-client';
-import { uniqueKeys } from '../lib/field-keys';
+import {
+  extractRequestFromScenario,
+  scenarioInputFromDetection,
+  selectedFields,
+  type FieldConfig,
+} from './scenario-rules';
 
-export interface FieldConfig {
-  selected: boolean;
-  label: string;
-  required: boolean;
-  valueType: FieldValueType;
-}
+export type { FieldConfig };
 
 export interface SourceState {
   source: DetectedSource;
@@ -44,7 +49,14 @@ export interface ExtractionColumn {
 export type Extraction =
   | { status: 'idle' }
   | { status: 'loading' }
-  | { status: 'done'; sourceId: string; columns: ExtractionColumn[]; result: ExtractResult }
+  | {
+      status: 'done';
+      columns: ExtractionColumn[];
+      result: ExtractResult;
+      /** Scénario utilisé : seules ses extractions peuvent être enregistrées. */
+      scenario?: Scenario;
+      saved?: { runId: string; count: number };
+    }
   | { status: 'error'; error: AppError };
 
 export const MANUAL_SOURCE_ID = 'manual';
@@ -59,8 +71,10 @@ const MANUAL_SOURCE: DetectedSource = {
   warnings: [],
 };
 
+const storageFailure = (e: unknown): AppError => ({ code: 'INTERNAL_ERROR', message: storageErrorMessage(e) });
+
 function defaultConfig(column: DetectedColumn, selected: boolean): FieldConfig {
-  return { selected, label: column.label, required: false, valueType: column.valueType };
+  return { selected, label: column.label, required: false, sensitive: false, valueType: column.valueType };
 }
 
 function initialState(source: DetectedSource, previous?: SourceState): SourceState {
@@ -76,7 +90,7 @@ function initialState(source: DetectedSource, previous?: SourceState): SourceSta
   return { source, columns: [...source.columns, ...extras], config };
 }
 
-export function useDetection(tabId: number | null) {
+export function useDetection(tabId: number | null, pageUrl: string | null) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
   const [report, setReport] = useState<DetectionReport | null>(null);
@@ -182,36 +196,85 @@ export function useDetection(tabId: number | null) {
     if (!result.ok) setError(result.error);
   }
 
-  async function extract(sourceId: string) {
-    const state = sources[sourceId];
-    if (tabId === null || !state) return;
-    const selected = state.columns.filter((c) => state.config[c.id]?.selected);
-    if (selected.length === 0) {
-      setExtraction({ status: 'error', error: { code: 'INVALID_MESSAGE', message: 'Sélectionnez au moins un champ.' } });
-      return;
-    }
-    const keys = uniqueKeys(selected.map((c) => state.config[c.id]!.label));
+  async function runExtraction(request: Extract<ContentRequest, { type: 'CONTENT_EXTRACT' }>, columns: ExtractionColumn[], scenario?: Scenario) {
+    if (tabId === null) return;
     setExtraction({ status: 'loading' });
-    const { source } = state;
-    const result = await callContent(
-      tabId,
-      {
-        type: 'CONTENT_EXTRACT',
-        source: { kind: source.kind, container: source.container, itemSelector: source.itemSelector, headerMode: source.headerMode },
-        fields: selected.map((c, i) => ({ key: keys[i]!, locator: c.locator, read: c.read })),
-      },
-      ExtractResultSchema,
-    );
+    const result = await callContent(tabId, request, ExtractResultSchema);
     if (!result.ok) {
       setExtraction({ status: 'error', error: result.error });
       return;
     }
-    setExtraction({
-      status: 'done',
-      sourceId,
-      result: result.data,
-      columns: selected.map((c, i) => ({ key: keys[i]!, label: state.config[c.id]!.label, required: state.config[c.id]!.required })),
-    });
+    setExtraction({ status: 'done', result: result.data, columns, ...(scenario ? { scenario } : {}) });
+  }
+
+  /** Extraction de la page avec la configuration du panneau (aperçu, non enregistré). */
+  async function extract(sourceId: string) {
+    const state = sources[sourceId];
+    if (!state) return;
+    // Un champ sensible n'est jamais lu.
+    const fields = selectedFields(state.columns, state.config).filter((f) => !f.config.sensitive);
+    if (fields.length === 0) {
+      setExtraction({ status: 'error', error: { code: 'INVALID_MESSAGE', message: 'Sélectionnez au moins un champ non sensible.' } });
+      return;
+    }
+    const { source } = state;
+    await runExtraction(
+      {
+        type: 'CONTENT_EXTRACT',
+        source: { kind: source.kind, container: source.container, itemSelector: source.itemSelector, headerMode: source.headerMode },
+        fields: fields.map(({ column, key }) => ({ key, locator: column.locator, read: column.read })),
+      },
+      fields.map(({ config, key }) => ({ key, label: config.label, required: config.required })),
+    );
+  }
+
+  /** Extraction de la page avec les règles d'un scénario enregistré. */
+  async function extractWithScenario(scenario: Scenario) {
+    const prepared = extractRequestFromScenario(scenario);
+    if (!prepared.ok) {
+      setExtraction({ status: 'error', error: { code: 'SOURCE_NOT_FOUND', message: prepared.message } });
+      return;
+    }
+    const columns = scenario.fields
+      .filter((f) => !f.sensitive && prepared.request.fields.some((r) => r.key === f.key))
+      .map((f) => ({ key: f.key, label: f.label, required: f.required }));
+    await runExtraction(prepared.request, columns, scenario);
+  }
+
+  /** Enregistre la configuration d'une source comme nouveau scénario (brouillon). */
+  async function saveAsScenario(sourceId: string, name: string): Promise<Scenario | null> {
+    const state = sources[sourceId];
+    if (!state || !pageUrl) return null;
+    setError(null);
+    setNotice(null);
+    if (!selectedFields(state.columns, state.config).some((f) => !f.config.sensitive)) {
+      setError({ code: 'INVALID_MESSAGE', message: 'Sélectionnez au moins un champ non sensible.' });
+      return null;
+    }
+    try {
+      const scenario = await createScenario(scenarioInputFromDetection(state.source, state.columns, state.config, name, pageUrl));
+      setNotice(`Scénario « ${scenario.name} » enregistré (brouillon, révision 1).`);
+      return scenario;
+    } catch (e) {
+      setError(storageFailure(e));
+      return null;
+    }
+  }
+
+  /** Enregistre le résultat d'une extraction faite avec un scénario, comme nouvelle exécution. */
+  async function saveResults() {
+    if (extraction.status !== 'done' || !extraction.scenario || extraction.saved || !pageUrl) return;
+    try {
+      const { run, records } = await saveManualRun({
+        scenario: extraction.scenario,
+        extraction: extraction.result,
+        pageUrl,
+        ...(tabId !== null ? { tabId } : {}),
+      });
+      setExtraction({ ...extraction, saved: { runId: run.id, count: records.length } });
+    } catch (e) {
+      setExtraction({ status: 'error', error: storageFailure(e) });
+    }
   }
 
   return {
@@ -234,6 +297,9 @@ export function useDetection(tabId: number | null) {
     cancelPick,
     highlight,
     extract,
+    extractWithScenario,
+    saveAsScenario,
+    saveResults,
   };
 }
 
